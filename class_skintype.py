@@ -1,0 +1,22 @@
+class_skintype = [
+  'Age Miracle Serum',
+  'Age Miracle Whip Cream',
+  'Anti-perspirant Powder Soft Roll-on',
+  'Cleansing Balm',
+  'Collagen + Omega 6 Deodorant Dry Serum',
+  'Cream Diamond',
+  'Cream HN',
+  'Cream La Bella',
+  'Cream Temulawak',
+  'Deep Cleanse Nourishment Shampoo',
+  'Deeply Nourishing Nourishing Bodywash',
+  'Hair Boost Nourishment Shampoo',
+  'Healthy Bright Gluta-Hya Serum Burst Lotion',
+  'Healthy Bright Gluta-Hya Serum Burst Lotion Overnight',
+  'Healthy Bright Gluta-Hya Serum Burst UV Lotion',
+  'Men Acne Solution Facial Foam',
+  'Men Active Bright Acne Expert Gel Wash',
+  'Men Healthy White Face Wash',
+  'White Beauty 3-in-1 Potion Essence',
+  'Tabita Glow'
+]
