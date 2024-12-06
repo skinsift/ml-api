@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from connect import get_db
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
-from models import User
+from models.models import User
 from google.cloud import secretmanager
 import os
 import logging

@@ -1,4 +1,5 @@
 import uvicorn
+import fastapi
 import os  # Impor os untuk mengambil variabel lingkungan
 from fastapi import FastAPI
 from routes import asesmen, ocr

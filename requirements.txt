@@ -1,0 +1,12 @@
+fastapi[standart]
+uvicorn
+tensorflow
+pydantic
+python-multipart
+numpy
+Pillow
+tensorflow
+cloud-sql-python-connector[pymysql]
+SQLAlchemy
+google-cloud-secret-manager
+jose
