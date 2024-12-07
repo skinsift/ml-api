@@ -2,7 +2,7 @@ import os, string
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, Depends , File, UploadFile, HTTPException, Form
+from fastapi import APIRouter, Depends , File, UploadFile, Form
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from connect import get_db
@@ -188,7 +188,7 @@ def find_matching_products(recommended_products: list, db: Session):
             # Jika tidak ada produk yang cocok, kembalikan respons 404
             return JSONResponse(
                 status_code=404,
-                content=create_response(404, "No products found")
+                content=create_response(404, "Mohon maaf, saat ini belum ada rekomendasi produk yang sesuai dengan database kami :)")
             )
 
         # Format respons menggunakan list comprehension

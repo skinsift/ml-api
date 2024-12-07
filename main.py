@@ -1,8 +1,7 @@
 import uvicorn
-import fastapi
 import os  # Impor os untuk mengambil variabel lingkungan
 from fastapi import FastAPI
-from routes import asesmen, ocr
+from routes import asesmen
 
 # Inisialisasi aplikasi FastAPI
 app = FastAPI()
@@ -12,7 +11,6 @@ def read_root():
     return {"message": "Hello from Cloud Run"}
 
 app.include_router(asesmen.router)
-# app.include_router(ocr.router)
 
 
 if __name__ == "__main__":
