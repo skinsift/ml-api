@@ -1,18 +1,19 @@
-import os
+import os, string
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import string
 from fastapi import APIRouter, Depends , File, UploadFile, HTTPException, Form
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from connect import get_db
 from utils import get_current_user, create_response
-from models.models import User, Notes, Ingredient
+from models.models import User, Notes, Ingredient, Product
 from tensorflow.keras.preprocessing import image
+from pydantic import BaseModel
 
 router = APIRouter()
 
+CLOUD_BUCKET_BASE_URL = "https://storage.googleapis.com/skinsift/products/"
 model_path = "models/skintype_model.tflite"
 df = pd.read_csv('models/product_asesmen.csv')
 df['ingredients'] = df['ingredients'].fillna('').astype(str)
@@ -165,6 +166,65 @@ def get_user_ingredients(user_id: str, db: Session):
     except Exception as e:
         raise ValueError(f"Error in get_user_ingredients: {e}")
 
+# Definisikan model respons produk
+class ProductResponse(BaseModel):
+    Id_Products: int
+    nama_product: str
+    merk: str
+    deskripsi: str
+    url_gambar: str | None  # URL gambar opsional
+
+# Fungsi untuk mencocokkan produk
+def find_matching_products(recommended_products: list, db: Session):
+    try:
+        # Query database untuk mencocokkan nama produk
+        matching_products = (
+            db.query(Product)
+            .filter(Product.nama_product.in_(recommended_products))  # Filter berdasarkan nama
+            .all()
+        )
+
+        if not matching_products:
+            # Jika tidak ada produk yang cocok, kembalikan respons 404
+            return JSONResponse(
+                status_code=404,
+                content=create_response(404, "No products found")
+            )
+
+        # Format respons menggunakan list comprehension
+        response = [
+            ProductResponse(
+                Id_Products=product.Id_Products,
+                nama_product=product.nama_product,
+                merk=product.merk,
+                deskripsi=product.deskripsi,
+                url_gambar=f"{CLOUD_BUCKET_BASE_URL}{product.nama_gambar}" if product.nama_gambar else None
+            ).dict()  # Convert to dict for JSON serialization
+            for product in matching_products
+        ]
+
+        # Buat respons dasar
+        base_response = create_response(200, "Products fetched successfully", response)
+
+        # Sesuaikan nama kunci "list" menjadi "Productlist" jika ada
+        if "list" in base_response:
+            base_response["Productlist"] = base_response.pop("list")
+
+        # Kembalikan respons dengan status 200
+        return JSONResponse(
+            status_code=200,
+            content=base_response
+        )
+
+    except Exception as e:
+        # Kembalikan respons error 500 jika terjadi kesalahan
+        return JSONResponse(
+            status_code=500,
+            content=create_response(500, f"Database Error: {str(e)}")
+        )
+
+
+
 @router.post("/asesmen")
 async def asesmen(
     file: UploadFile = File(...),  # File tetap diterima sebagai UploadFile
@@ -176,46 +236,42 @@ async def asesmen(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        # Split string untuk parameter 'fungsi'
-        fungsi_list = fungsi.split(", ")  # Jika 'fungsi' berisi "a, b", hasilnya: ['a', 'b']
-
-        # Input asesmen lainnya
+        # Proses parameter form-data
+        fungsi_list = fungsi.split(", ")  # Pisahkan 'fungsi' menjadi list
         input_asesmen = [
             sensitif,
             tujuan,
             fungsi_list,
             hamil_menyusui,
-            [],  # Ini placeholder untuk 'ingredients', nanti diisi dari database
+            [],  # Placeholder untuk 'ingredients', diisi nanti
         ]
 
-        # Ambil predicted skin type
+        # Simpan file sementara untuk prediksi
         upload_dir = "uploads"
         os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, file.filename)
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
+
+        # Prediksi skin type
         predicted_skin_type = predict_skin_type(file_path, model_path)
 
-        # Ambil ingredients "Tidak Suka" dari database
+        # Ambil ingredients "Tidak Suka" berdasarkan user dari database
         user_ingredients = get_user_ingredients(current_user.Users_ID, db)
-        input_asesmen[-1] = user_ingredients  # Masukkan ingredients ke input asesmen
+        input_asesmen[-1] = user_ingredients
 
-        # Rekomendasi produk
-        product = recommended_product(input_asesmen, predicted_skin_type)
+        # Rekomendasikan produk berdasarkan asesmen
+        recommended_products = recommended_product(input_asesmen, predicted_skin_type)
+
+        # Cocokkan nama produk yang direkomendasikan dengan database
+        response = find_matching_products(recommended_products, db)
 
         # Hapus file sementara
         os.remove(file_path)
 
-        return {"predicted_skin_type": predicted_skin_type, "recommended_products": product}
-    #     return create_response(
-    #     status_code=201,
-    #     message="User registered successfully",
-    #     data={
-    #         "user_id": new_user.Users_ID,
-    #         "username": new_user.Username,
-    #         "email": new_user.Email,
-    #         "created_at": new_user.created_at,  # Sertakan waktu pembuatan
-    #     },
-    # )
+        return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(
+            status_code=500,
+            content=create_response(500, f"Error: {str(e)}")
+        )

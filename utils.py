@@ -61,7 +61,6 @@ def create_response(
 
     # Struktur dasar respons
     response = {
-        "status_code": status_code,
         "error": is_error,
         "message": message,
     }
