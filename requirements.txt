@@ -9,4 +9,5 @@ tensorflow
 cloud-sql-python-connector[pymysql]
 SQLAlchemy
 google-cloud-secret-manager
-jose
+python-jose
+pandas

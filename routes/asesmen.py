@@ -3,17 +3,17 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import string
-from fastapi import APIRouter, Depends , File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends , File, UploadFile, HTTPException, Form
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from connect import get_db
-from utils import get_current_user
-from models.models import User
+from utils import get_current_user, create_response
+from models.models import User, Notes, Ingredient
 from tensorflow.keras.preprocessing import image
 
 router = APIRouter()
 
-TFLITE_MODEL_PATH = "models/skintype_model.tflite"
+model_path = "models/skintype_model.tflite"
 df = pd.read_csv('models/product_asesmen.csv')
 df['ingredients'] = df['ingredients'].fillna('').astype(str)
 
@@ -151,31 +151,71 @@ def recommended_product(kriteria, predicted_skin_type):
 
     return produk['nama_product'].tolist()
 
+def get_user_ingredients(user_id: str, db: Session):
+
+    try:
+        ingredients = (
+            db.query(Ingredient.nama)
+            .join(Notes, Notes.id_ingredients == Ingredient.Id_Ingredients)
+            .filter(Notes.users_id == user_id)
+            .all()
+        )
+        # Mengubah hasil query menjadi list string
+        return [ingredient[0] for ingredient in ingredients]
+    except Exception as e:
+        raise ValueError(f"Error in get_user_ingredients: {e}")
 
 @router.post("/asesmen")
 async def asesmen(
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # File tetap diterima sebagai UploadFile
+    sensitif: str = Form(...),    # Ambil dari form-data
+    tujuan: str = Form(...),
+    fungsi: str = Form(...),      # Multi-value (string, dipisahkan koma)
+    hamil_menyusui: str = Form(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     try:
-        # Simpan file sementara
+        # Split string untuk parameter 'fungsi'
+        fungsi_list = fungsi.split(", ")  # Jika 'fungsi' berisi "a, b", hasilnya: ['a', 'b']
+
+        # Input asesmen lainnya
+        input_asesmen = [
+            sensitif,
+            tujuan,
+            fungsi_list,
+            hamil_menyusui,
+            [],  # Ini placeholder untuk 'ingredients', nanti diisi dari database
+        ]
+
+        # Ambil predicted skin type
         upload_dir = "uploads"
         os.makedirs(upload_dir, exist_ok=True)
         file_path = os.path.join(upload_dir, file.filename)
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
+        predicted_skin_type = predict_skin_type(file_path, model_path)
 
-        # Prediksi tipe kulit
-        predicted_skin_type = predict_skin_type(file_path, 'skintype_model.tflite')
+        # Ambil ingredients "Tidak Suka" dari database
+        user_ingredients = get_user_ingredients(current_user.Users_ID, db)
+        input_asesmen[-1] = user_ingredients  # Masukkan ingredients ke input asesmen
 
-        # Contoh input untuk asesmen
-        input_asesmen = ['a', 'b', ['b', 'f'], 'a', []]
+        # Rekomendasi produk
         product = recommended_product(input_asesmen, predicted_skin_type)
 
         # Hapus file sementara
         os.remove(file_path)
 
         return {"predicted_skin_type": predicted_skin_type, "recommended_products": product}
+    #     return create_response(
+    #     status_code=201,
+    #     message="User registered successfully",
+    #     data={
+    #         "user_id": new_user.Users_ID,
+    #         "username": new_user.Username,
+    #         "email": new_user.Email,
+    #         "created_at": new_user.created_at,  # Sertakan waktu pembuatan
+    #     },
+    # )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

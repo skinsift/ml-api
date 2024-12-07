@@ -1,3 +1,4 @@
+import os, logging
 from fastapi.responses import JSONResponse
 from fastapi import Request, Depends, HTTPException 
 from sqlalchemy.orm import Session
@@ -6,8 +7,7 @@ from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from models.models import User
 from google.cloud import secretmanager
-import os
-import logging
+from typing import Any, Dict, Optional
 
 secret_client = secretmanager.SecretManagerServiceClient()
 
@@ -50,3 +50,25 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
     return user
+
+def create_response(
+    status_code: int,
+    message: str,
+    data: Optional[Any] = None,
+    data_key: Optional[str] = None  # Parameter tambahan
+) -> Dict[str, Any]:
+    is_error = not (200 <= status_code < 300)
+
+    # Struktur dasar respons
+    response = {
+        "status_code": status_code,
+        "error": is_error,
+        "message": message,
+    }
+
+    if data is not None:
+        # Gunakan kunci khusus jika disediakan, default ke "list" atau "data"
+        key = data_key or ("list" if isinstance(data, list) else "data")
+        response[key] = data
+
+    return response
