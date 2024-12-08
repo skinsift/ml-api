@@ -2,6 +2,7 @@ import os, string
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import logging
 from fastapi import APIRouter, Depends , File, UploadFile, Form
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
