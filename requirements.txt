@@ -11,3 +11,4 @@ SQLAlchemy
 google-cloud-secret-manager
 python-jose
 pandas
+logging
