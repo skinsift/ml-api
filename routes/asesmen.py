@@ -223,7 +223,8 @@ def find_matching_products(recommended_products: list, db: Session):
             content=create_response(500, f"Database Error: {str(e)}")
         )
 
-
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 @router.post("/asesmen")
 async def asesmen(
@@ -236,6 +237,10 @@ async def asesmen(
     current_user: User = Depends(get_current_user)
 ):
     try:
+        # Log permintaan yang diterima
+        logger.debug(f"Request received: sensitif={sensitif}, tujuan={tujuan}, fungsi={fungsi}, hamil_menyusui={hamil_menyusui}")
+        logger.debug(f"File received: filename={file.filename}, content_type={file.content_type}")
+
         # Proses parameter form-data
         fungsi_list = fungsi.split(", ")  # Pisahkan 'fungsi' menjadi list
         input_asesmen = [
