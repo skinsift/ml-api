@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import logging
-from fastapi import APIRouter, Depends , File, UploadFile, Form
+from fastapi import APIRouter, Depends, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from connect import get_db
@@ -43,6 +43,7 @@ def predict_skin_type(file_path: str, model_path: str) -> str:
         class_names = ['Berjerawat', 'Berminyak', 'Kering', 'Normal']
         predicted_class = np.argmax(predictions)
 
+        print(f"Hasil scan {class_names[predicted_class]}")
         return class_names[predicted_class]
     except Exception as e:
         raise ValueError(f"Error in predict_skin_type: {e}")
@@ -151,6 +152,7 @@ def recommended_product(kriteria, predicted_skin_type):
             (df['hamil_menyusui'] == hamil_menyusui)
         ]
 
+    print (f"Hasil produk {produk['nama_product']}")
     return produk['nama_product'].tolist()
 
 def get_user_ingredients(user_id: str, db: Session):
