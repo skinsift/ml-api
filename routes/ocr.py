@@ -9,7 +9,7 @@ import pytesseract, string, re, os, logging
 import pandas as pd
 
 router = APIRouter()
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 # Load the ingredients dataset
 ingredients_path = "models/ingredients.csv"
