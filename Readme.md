@@ -3,10 +3,13 @@
 This project provides APIs for machine learning functionalities specifically designed for skincare applications. The core features include predicting skin type through the analysis of user-uploaded images and assessing skincare products by evaluating their ingredients and aligning them with user needs. The application is containerized using Docker and deployed to Google Cloud Run, ensuring scalability, maintainability, and seamless integration with frontend applications and other backend systems.
 
 ## Access Our Deployed API :
+
 [this link](https://mlapi-956646968871.asia-southeast2.run.app/).
 
 ---
+
 # Key Features:
+
 Skin Type Prediction:
 Analyzes user-uploaded images to determine the user's skin type, providing accurate predictions for skincare personalization.
 
@@ -19,7 +22,8 @@ The application is containerized using Docker and deployed to Google Cloud Run, 
 ---
 
 # API Documentation
-[this link](https://docs.google.com/document/d/1GI9SMBdv5hgurDJUJXD3nmf1kTuGJrzbiZI1pseqYZ4/edit?usp=sharing)
+
+[this link](https://field-ridge-34b.notion.site/SkinSift-API-Docs-15960ff96d508037a0aad64f34924953)
 
 ---
 
@@ -34,13 +38,16 @@ This project demonstrates how to connect a Python application to a Google Cloud 
 Before running the code, ensure the following prerequisites are met:
 
 1. **Google Cloud SQL Instance**:
+
    - A Cloud SQL instance with the name `skinsift-2024:asia-southeast2:skinsift-app`.
    - The database `skinsift_app` is created inside this instance.
 
 2. **Secrets in Secret Manager**:
+
    - Create a secret in Google Cloud Secret Manager named `skinsift_sql_pwd` containing the Cloud SQL root password.
 
 3. **Google Cloud SDK**:
+
    - Install and authenticate the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
 
 4. **Dependencies**:
@@ -52,12 +59,15 @@ Before running the code, ensure the following prerequisites are met:
 ## How It Works
 
 ### 1. **Database Password Management**
+
 The database password is securely stored in Google Cloud Secret Manager. The `access_secret_version` function fetches the password when required.
 
 ### 2. **SQLAlchemy Engine Creation**
+
 The `getconn` function uses Google Cloud SQL Connector to establish a secure connection to the Cloud SQL instance. This connection is then used to create a SQLAlchemy engine with a connection pool.
 
 ### 3. **Database Session Handling**
+
 The SQLAlchemy `SessionLocal` object is used to manage database sessions.
 
 ## Code Overview
@@ -73,22 +83,25 @@ The SQLAlchemy `SessionLocal` object is used to manage database sessions.
 ## Usage
 
 ### Running the Code
+
 1. Ensure all prerequisites are met.
 2. Set up your Google Cloud credentials with the following command:
    ```bash
    gcloud auth application-default login
    ```
 3. Execute the script
-   ``` bash
+   ```bash
    python your_script_name.py
    ```
 
 ### Output
+
 The script will:
 Establish a connection to the Cloud SQL database.
 Print "Connecting to Cloud SQL..." and "Connected to the database!" if successful.
 
 ## Troubleshooting
+
 Common Issues
 Cloud SQL Connection Errors:
 
@@ -106,26 +119,35 @@ Run pip install -r requirements.txt if you're missing dependencies.
 # Running the Application Locally
 
 ## 1. Cloning the Repository
+
 ```bash
 git clone <repository_url>
 cd <project_folder>
 ```
+
 ## 2. Installing Requirements
-``` bash
+
+```bash
 pip install -r requirements.txt
 ```
+
 ## 3. Modifying Access to Secret Manager
+
 Open the `connect.py` file.
 Update the following section:
-``` python
+
+```python
 sql_password = access_secret_version('YOUR_PROJECT_ID', 'scancare_sql_pwd', '1')
 ```
+
 Replace YOUR_PROJECT_ID with your Google Cloud project ID.
 
 ## 4. Modifying Connection to Database
+
 Open the `connect.py` file.
 Update the following section:
-``` python
+
+```python
 def getconn():
     conn = connector.connect(
         "YOUR_SQL_INSTANCE_CONNECTION_NAME",
@@ -136,31 +158,40 @@ def getconn():
     )
     return conn
 ```
+
 Replace YOUR_SQL_INSTANCE_CONNECTION_NAME with your SQL instance connection name.
 
 ## 5. Running the FastAPI Application
+
 Open the `main.py` file.
 Update the run configuration:
-``` python
+
+```python
 port = int(os.environ.get('PORT', 8080))
 print(f"Listening to http://localhost:{port}")
 uvicorn.run(app, host='localhost', port=port)
 ```
+
 ## 6. Starting the Local Server
-``` bash
+
+```bash
 python main.py
 ```
+
 ## 7. Accessing the API
+
 - Use the API endpoints as documented earlier.
 - Test the endpoints using Postman:
-   Open Postman and create a new request.
-   Set the request method (e.g., GET, POST) and enter the API endpoint URL (e.g., `http://localhost:8080/<endpoint>`).
-   If required, add headers, query parameters, or body data as per the API specifications.
-   Send the request and verify the response.
+  Open Postman and create a new request.
+  Set the request method (e.g., GET, POST) and enter the API endpoint URL (e.g., `http://localhost:8080/<endpoint>`).
+  If required, add headers, query parameters, or body data as per the API specifications.
+  Send the request and verify the response.
+
 ---
 
 # Deploying the Application to Cloud Run
-``` bash
+
+```bash
 # Cloning the Repository
 git clone <repository_url>
 
@@ -186,7 +217,4 @@ SERVICE_ACCOUNT=$(gcloud run services describe YOUR_SERVICE_NAME --platform=mana
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/secretmanager.secretAccessor
 
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member=serviceAccount:${SERVICE_ACCOUNT} --role=roles/cloudsql.client
-``` 
-
-
-
+```
