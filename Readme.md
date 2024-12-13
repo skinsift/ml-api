@@ -23,7 +23,7 @@ The application is containerized using Docker and deployed to Google Cloud Run, 
 
 # API Documentation
 
-[this link](https://field-ridge-34b.notion.site/SkinSift-API-Docs-15960ff96d508037a0aad64f34924953)
+[API Documentation SkinSift](https://field-ridge-34b.notion.site/SkinSift-API-Docs-15960ff96d508037a0aad64f34924953)
 
 ---
 
